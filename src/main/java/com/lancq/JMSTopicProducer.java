@@ -6,10 +6,10 @@ import javax.jms.*;
 
 /**
  * @Author lancq
- * @Description
+ * @Description 消息发布
  * @Date 2018/7/6
  **/
-public class JMSQueueProducer {
+public class JMSTopicProducer {
     public static void main(String[] args) {
         //连接工厂
         ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://192.168.227.129:61616");
@@ -18,27 +18,29 @@ public class JMSQueueProducer {
         try {
             //创建连接
             connection = connectionFactory.createConnection();
+
             //开启连接
             connection.start();
 
             //创建会话
-            //Boolean.TRUE表时开启事务会话，后面需要调用commit提交事务；Boolean.FALSE开启非事务会话，后面不需要使用commit
-            Session session = connection.createSession(Boolean.FALSE, Session.AUTO_ACKNOWLEDGE);
+            Session session = connection.createSession(Boolean.TRUE, Session.AUTO_ACKNOWLEDGE);
+
             //创建目的地
-            Destination destination = session.createQueue("MyQueue");
+            Destination destination = session.createTopic("MyTopic");
+
             //创建生产者
             MessageProducer producer = session.createProducer(destination);
-            //producer.setDeliveryMode(DeliveryMode.PERSISTENT);
 
-            for(int i=0; i<10; i++){
+            producer.setDeliveryMode(DeliveryMode.PERSISTENT);//持久化消息
 
-                //发送消息
-                //创建消息,消息类型有text、bytes、map、object、stream
-                TextMessage message = session.createTextMessage("Hello Word!" + i);
-                producer.send(message);
+            //创建消息
+            TextMessage message = session.createTextMessage("全体员工，明天早上9点开会!");
 
-            }
-            //session.commit();//消息提交
+            //发送消息
+            producer.send(message);
+
+            session.commit();//消息提交
+
             session.close();
         } catch (JMSException e) {
             e.printStackTrace();
